@@ -1,0 +1,5 @@
+access-points:
+  ssid-alpha:
+    password: ssid-alpha-password
+  ssid-bravo:
+    password: ssid-bravo-password

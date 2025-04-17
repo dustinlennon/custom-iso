@@ -1,0 +1,65 @@
+## template: jinja
+#cloud-config
+
+# Ref: https://canonical-subiquity.readthedocs-hosted.com/en/latest/reference/autoinstall-reference.html
+#
+# generate passwords with `mkpasswd`.  E.g., 
+#
+#     mkpasswd
+#     mkpasswd -m yescrypt --salt='$y$j9T$Q.c.PivvCbv2W/ELad1Dh/$'
+#
+# the latter being explicit with respect to this configuration.  N.B., in this 
+# example, "password" was used for both 'ubuntu' and 'johndoe' accounts.
+#
+autoinstall:
+  version: 1
+  timezone: "America/Vancouver"
+
+  interactive-sections:
+  - storage
+
+  storage:
+    layout:
+      name: lvm
+      sizing-policy: all
+
+  early-commands: 
+  # install wireless drivers
+  - find /cdrom/pool/main/p/pcsc-lite -type f | xargs dpkg -i
+  - find /cdrom/pool/main/w/wpa -type f | xargs dpkg -i
+  - /cdrom/network-config.sh --early
+
+  # netplan: add network devices to autoinstall.yaml
+  - >
+    sed '$d' -i /autoinstall.yaml &&
+    cat /netplan.yml >> /autoinstall.yaml &&
+    echo "..." >> /autoinstall.yaml
+
+  late-commands:
+  - curtin in-target -- /cdrom/network-config.sh
+
+  identity:
+    hostname: "{{ v1.local_hostname }}"
+    username: ubuntu
+    password: '$y$j9T$Q.c.PivvCbv2W/ELad1Dh/$88juHFomM3VpiOO1nSssQDvr8Buahj9weM//nh2Utx3'
+
+  ssh:
+    install-server: true
+    allow-pw: true
+    authorized-keys: 
+    - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGtgk77t6XChLobt6U4NcPLsH/034a4WSeJP7u/6zMcq johndoe@example
+
+  drivers:
+    install: true
+
+  user-data:
+    users:
+    # the default user is 'ubuntu'; locked password
+    - default
+    - name: johndoe
+      gecos: John Doe
+      passwd: '$y$j9T$Q.c.PivvCbv2W/ELad1Dh/$88juHFomM3VpiOO1nSssQDvr8Buahj9weM//nh2Utx3'
+      groups: sudo
+      shell: /bin/bash
+      lock_passwd: False
+

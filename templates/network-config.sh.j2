@@ -1,0 +1,44 @@
+#!/bin/bash
+#
+# ---> WARNING! THIS SCRIPT IS DYNAMICALLY GENERATED <---
+#
+# This script encodes the network.py, netplan.yml, and access_points.yml such
+# that it can be decoded, executed, and cleaned up.  
+#
+# testing: 
+#   args="--rootfs ${PWD}/rfs" ./network-config.sh
+#   args="--rootfs ${PWD}/rfs" ./network-config.sh --early
+#
+# The process currently generates the following files:
+#
+# ./rfs/etc/systemd/resolved.conf.d/10-mdns.conf
+# ./rfs/etc/systemd/network/10-netplan-wlp0s20f3.network.d/10-mdns.conf
+# ./rfs/netplan.yml   <-- from "--early"
+#
+# to regenerate DATA:
+#   tar -C src -cz . | base64 -
+
+read -r -d '' DATA<<EOF
+{{ encoded_data }}
+EOF
+
+pushd () {
+    command pushd "$@" > /dev/null
+}
+
+popd () {
+    command popd "$@" > /dev/null
+}
+
+TMP=$(mktemp -d)
+cleanup() {
+	>&2 echo ">>> cleaning up $TMP"
+	rm -rf $TMP
+}
+trap cleanup EXIT
+
+args=${args:-""}
+pushd $TMP
+echo "$DATA" | base64 -d | tar -xz
+python3 network.py $args "$@"
+popd
