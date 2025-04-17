@@ -48,7 +48,7 @@ src/rebuild.py
 This has been tested with ubuntu-24.04.2-live-server-amd64.iso.  Create a link to this ISO file in the current directory, then:
 
 ```bash
-# ln $PWD/Data/ISO/ubuntu-24.04.2-live-server-amd64.iso
+# ln $HOME/Data/ISO/ubuntu-24.04.2-live-server-amd64.iso
 sudo ./iso-create.sh
 ```
 
