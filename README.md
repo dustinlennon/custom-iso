@@ -2,7 +2,7 @@
 
 Create a custom ISO Ubuntu image that works over wireless?  Oddly difficult.  One needs to navigate autoinstall, netplan, and cloud-init configurations.  Using DHCP incurs additional complexity, requiring discovery via multicast dns (mdns).
 
-This solution provides machinery that dynamically generates a netplan configuration as well as supporting systemd-resolved and systemd-network files.  The result is a system accessible via authorized keys, simply 'ssh ubuntu@host.local'
+This solution provides machinery that dynamically generates a netplan configuration as well as supporting systemd-resolved and systemd-network files.  The result is a system accessible via authorized keys, simply `ssh ubuntu@host.local`
 
 ## up and running
 
