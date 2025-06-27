@@ -3,3 +3,6 @@ network-config.sh
 ubuntu-24.04.2-live-server-amd64.iso
 scratch.iso
 rfs
+.env
+__pycache__
+test/cmdline

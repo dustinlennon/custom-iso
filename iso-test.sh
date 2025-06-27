@@ -4,7 +4,7 @@
 # Ref: https://www.qemu.org/docs/master/system/introduction.html
 #
 # access:
-# 	ssh ubuntu@localhost -p 2222
+# 	ssh ubuntu@localhost -p 2222 -i mrdl_ubuntu
 #
 
 stty -echoctl

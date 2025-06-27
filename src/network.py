@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-import argparse
+import re
 import yaml
 import json
 import subprocess
@@ -8,71 +8,56 @@ import shlex
 import copy
 from pathlib import Path
 
-parser = argparse.ArgumentParser()
-parser.add_argument("--rootfs", default="/")
-parser.add_argument("--early", action = "store_true")
+from docs import *
+from opener import *
+from parser import Parser
 
-network_conf = r'''
-[Network]
-MulticastDNS=yes
-'''.lstrip()
 
-resolve_conf = r'''
-[Resolve]
-MulticastDNS=yes
-'''.lstrip()
+# test_args = shlex.split("--context tty --cmdline ./test/cmdline")
+test_args = None
 
-# pfix = lambda args, pth: Path(args.prefix) / pth
-rfix = lambda args, pth: Path(args.rootfs) / pth.strip("/")
-
-class Opener:
-  def __init__(self, ns):
-    self.ns = ns
-
-  def __call__(self, file, *args, **kw):
-    file     = rfix(self.ns, file)
-    dirname  = Path(file).parent
-    return self.Context(file, dirname, *args, **kw)
-
-  class Context:
-    def __init__(self, file, dirname : Path, *args, **kw):
-      self.file = file
-      self.dirname = dirname
-      self.args = args
-      self.kw = kw
-
-    def __enter__(self):
-      self.dirname.mkdir(parents = True, exist_ok = True)
-      self._f = open(self.file, *self.args, **self.kw)
-      return self._f
-    
-    def __exit__(self, exc_type, exc_value, tb):
-      self._f.close()
 
 if __name__ == '__main__':
 
-  args = parser.parse_args()
-  args.late = not args.early
-  # args = parser.parse_args(
-  #   shlex.split(
-  #     "--rootfs rfs"
-  #   )
-  # )
+  parser  = Parser.build()
+  args    = parser.parse_args(test_args)
+  
+  writer = Opener(args)
 
-  opener = Opener(args)
-
-  # read netplan
-  with open("netplan.yml", "r") as f:
-    netplan = yaml.load(f, yaml.Loader)
+  # read netplan template
+  netplan = yaml.safe_load(netplan_yaml)
   network = netplan['network']
   _wired  = network['ethernets'].pop('_')
   _wifi   = network['wifis'].pop('_')
 
-  # read access_points
-  with open("access_points.yml", "r") as f:
-    access_points = yaml.load(f, yaml.Loader)
-  _wifi.update(access_points)
+  # extract kernel boot args information from cmdline
+  cmd     = shlex.split(f"cat {writer.args.cmdline}")
+  proc    = subprocess.run(cmd, capture_output = True)
+  cmdline = proc.stdout.decode("utf8")
+  tokens  = shlex.split(cmdline)
+  
+  rex_ssid = re.compile("wlan-ssid=(?P<ssid>.*)")
+  rex_pwd  = re.compile("wlan-pwd=(?P<pwd>.*)")
 
+  wlan = {}
+
+  ssid = None
+  for t in tokens:   
+    mssid  = rex_ssid.match(t)
+    mpwd   = rex_pwd.match(t)
+
+    if mssid:
+      ssid = mssid.group('ssid')
+      wlan.setdefault(ssid)
+    elif ssid and mpwd:
+      pwd = mpwd.group('pwd')
+      wlan[ssid] = pwd
+      ssid = None
+
+  _wifi['access-points'] = {
+    k:{'password' : v} for k,v in wlan.items() if v
+  }
+ 
   # network link data
   cmd = shlex.split("ip -j link")
   links = subprocess.run(cmd, capture_output = True)
@@ -84,7 +69,7 @@ if __name__ == '__main__':
   default_route = json.loads(default_route.stdout)
 
   try:
-    if args.early:
+    if writer.args.early:
       raise IndexError("early: no default route")
     default_ifname = default_route[0].get("dev", None)
   except IndexError:
@@ -106,16 +91,25 @@ if __name__ == '__main__':
     if ifname == default_ifname:
       network[key][ifname].pop('optional')
 
-  if args.early:
+  # early:  
+  #   /netplan.yml
+  if writer.args.early:
     filename = "/netplan.yml"
-    with opener(filename, "w") as f:
+    with writer(filename, "w") as f:
       yaml.dump(netplan, f, Dumper = yaml.Dumper)
 
-  # /etc/systemd/resolved.conf.d
-  # /etc/systemd/network/*conf
-  if args.late:
+  # late:  
+  #   /etc/netplan/60-preconfigured.yaml
+  #   /etc/systemd/resolved.conf.d
+  #   /etc/systemd/network/*conf
+  #   /etc/hostname
+  else:
+    # filename = "/etc/netplan/60-preconfigured.yaml"
+    # with writer(filename, "w") as f:
+    #   yaml.dump(netplan, f, Dumper = yaml.Dumper)
+
     filename = f"/etc/systemd/resolved.conf.d/10-mdns.conf"
-    with opener(filename, "w") as f:
+    with writer(filename, "w") as f:
       f.write(resolve_conf)
     
     for dev in links:
@@ -124,7 +118,12 @@ if __name__ == '__main__':
       dirname   = str(Path(filename).parent)
 
       if ifname.startswith("en") or ifname.startswith("wl"):
-        with opener(filename, "w") as f:
+        with writer(filename, "w") as f:
           f.write(network_conf.format(ifname = ifname))
       else:
         continue
+
+    filename = "/etc/hostname"
+    if writer.args.hostname:
+      with writer(filename, "w") as f:
+        f.write(writer.args.hostname)
