@@ -6,3 +6,4 @@ rfs
 .env
 __pycache__
 test/cmdline
+ramdisk

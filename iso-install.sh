@@ -7,6 +7,11 @@
 # 	ssh ubuntu@localhost -p 2222 -i mrdl_ubuntu
 #
 
+if [ "$USER" != "root" ]; then
+	>&2 echo ">>> error: run script as root"
+	exit 1
+fi
+
 stty -echoctl
 
 sigint_handler() {
@@ -31,8 +36,8 @@ kvm \
 	-device virtio-scsi-pci \
 	-device scsi-hd,drive=hd \
 	-blockdev driver=raw,node-name=hd,file.driver=file,file.filename=./ramdisk/root.img \
-	-device virtio-net-pci,netdev=unet \
 	-netdev user,id=unet,hostfwd=tcp::2222-:22 \
+	-device virtio-net-pci,netdev=unet \
 	-cdrom $ISO_PATH 2> /dev/null &
 
 pid=$!
