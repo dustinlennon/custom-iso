@@ -10,15 +10,13 @@
 #   --add-cmdline-arg 'hostname=hal ds=nocloud\;s=/cdrom/preseed'
 #
 
-if [ "$USER" != "root" ]; then
-	>&2 echo ">>> error: run script as root"
-	exit 1
-fi
+source iso-shared.sh
+
+check_root
 
 # rebuild network-config.sh
 sudo -u $SUDO_USER python3 src/create_script.py
 
-# CONFIG_PATH=$PWD/cloud-init
 SRCISO=$PWD/ubuntu-24.04.2-live-server-amd64.iso
 
 PYTHONPATH=./livefs-editor \
