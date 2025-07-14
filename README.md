@@ -115,7 +115,6 @@ Use kvm/qemu to run the ISO.
 ./iso-run.sh
 ```
 
-
-### copy to USB
+## USB devices
 
 [Startup Disk Creator](https://ubuntu.com/tutorials/create-a-usb-stick-on-ubuntu#1-overview) has a simple UI and is likely a good option for getting the ISO to a USB stick.
