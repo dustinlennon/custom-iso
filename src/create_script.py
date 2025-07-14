@@ -1,5 +1,8 @@
 #!/usr/bin/python3
 
+# This creates a self-extracting bash script containing the necessary python code
+# required to execute network.py.  See ./templates/network-config.sh.j2.
+
 import os
 import jinja2
 import subprocess
@@ -11,7 +14,14 @@ env = jinja2.Environment(
 template = env.get_template("network-config.sh.j2")
 
 # tar -C src -cz . | base64 -
-cmd_tar = shlex.split("tar -C src -cz network.py netplan.yml access_points.yml")
+files = ' '.join([
+  'docs.py',
+  'network.py',
+  'opener.py',
+  'parser.py'
+])
+
+cmd_tar = shlex.split(f"tar -C src -cz {files}")
 cmd_b64 = shlex.split("base64 -")
 
 proc_tar = subprocess.Popen(cmd_tar, stdout = subprocess.PIPE)

@@ -6,10 +6,9 @@
 # generate passwords with `mkpasswd`.  E.g., 
 #
 #     mkpasswd
-#     mkpasswd -m yescrypt --salt='$y$j9T$Q.c.PivvCbv2W/ELad1Dh/$'
+#     mkpasswd -m yescrypt --salt='$y$j9T$JHXk1KV/462GrKToRysPF.$'
 #
-# the latter being explicit with respect to this configuration.  N.B., in this 
-# example, "password" was used for both 'ubuntu' and 'johndoe' accounts.
+# the latter being explicit with respect to configuration.
 #
 autoinstall:
   version: 1
@@ -35,31 +34,25 @@ autoinstall:
     cat /netplan.yml >> /autoinstall.yaml &&
     echo "..." >> /autoinstall.yaml
 
+  # - netplan apply
   late-commands:
-  - curtin in-target -- /cdrom/network-config.sh
-
-  identity:
-    hostname: "{{ v1.local_hostname }}"
-    username: ubuntu
-    password: '$y$j9T$Q.c.PivvCbv2W/ELad1Dh/$88juHFomM3VpiOO1nSssQDvr8Buahj9weM//nh2Utx3'
+  - curtin in-target -- /cdrom/network-config.sh --hostname "{{ v1.local_hostname }}"
 
   ssh:
     install-server: true
-    allow-pw: true
-    authorized-keys: 
-    - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGtgk77t6XChLobt6U4NcPLsH/034a4WSeJP7u/6zMcq johndoe@example
+    allow-pw: false
 
   drivers:
     install: true
 
   user-data:
     users:
-    # the default user is 'ubuntu'; locked password
     - default
-    - name: johndoe
-      gecos: John Doe
-      passwd: '$y$j9T$Q.c.PivvCbv2W/ELad1Dh/$88juHFomM3VpiOO1nSssQDvr8Buahj9weM//nh2Utx3'
-      groups: sudo
+    - name: ansible
+      gecos: Ansible User
+      groups: users,admin,wheel
+      sudo: "ALL=(ALL) NOPASSWD:ALL"
       shell: /bin/bash
-      lock_passwd: False
-
+      lock_passwd: true
+      ssh_authorized_keys:
+        - ssh-rsa ....
