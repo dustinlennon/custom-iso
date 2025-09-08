@@ -9,6 +9,8 @@
 
 source iso-shared.sh
 
+FSPATH=image
+
 setup
 
 run_kvm \
@@ -17,9 +19,9 @@ run_kvm \
 	-m 4G \
 	-device virtio-scsi-pci \
 	-device scsi-hd,drive=hd \
-	-blockdev driver=raw,node-name=hd,file.driver=file,file.filename=./ramdisk/root.img \
+	-blockdev driver=raw,node-name=hd,file.driver=file,file.filename=./${FSPATH}/root.img \
 	-netdev user,id=unet,hostfwd=tcp::2222-:22 \
 	-device virtio-net-pci,netdev=unet \
-	-cdrom scratch.iso 2> /dev/null &
+	-cdrom scratch.iso 2> /dev/null
 
 teardown

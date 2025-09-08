@@ -1,6 +1,8 @@
 network_conf = r'''
 [Network]
 MulticastDNS=yes
+DNS=8.8.8.8
+DNS=8.8.4.4
 '''.lstrip()
 
 resolve_conf = r'''

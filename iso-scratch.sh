@@ -42,6 +42,8 @@ sudo ip link set tapx master virbr2
 sudo ip link set tapx up
 EOF
 
+FSPATH=image
+
 source iso-shared.sh
 
 setup
@@ -52,9 +54,9 @@ run_kvm \
 	-m 4G \
 	-device virtio-scsi-pci \
 	-device scsi-hd,drive=myhd \
-	-blockdev driver=raw,node-name=myhd,file.driver=file,file.filename=./ramdisk/root.img \
+	-blockdev driver=raw,node-name=myhd,file.driver=file,file.filename=./${FSPATH}/root.img \
 	-device virtio-net,mac=50:54:00:00:00:42,netdev=net0 \
-	-netdev tap,id=net0,br=virbr2,ifname=tapx,script=no,downscript=no
+	-netdev tap,id=net0,br=virbr2,ifname=tapx,script="/home/dnlennon/Workspace/Sandbox/custom-iso/scripts/scratch-ifup",downscript=no
 
 teardown
 

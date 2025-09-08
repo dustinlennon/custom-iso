@@ -24,20 +24,37 @@ destroy_ramdisk() {
 	read -n 1 -p 'erase ramdisk (N/y) ' && echo
 	if [ "$REPLY" = 'Y' ] || [ "$REPLY" = 'y' ]; then
 		sudo umount ./ramdisk
-		rmdir ramdisk	
+		rm -rf ramdisk	
 	fi
 }
+
+create_image() {
+	if [ ! -d image ]; then
+		mkdir image
+		touch ./image/root.img
+		truncate -s 20G ./image/root.img
+		mkfs.ext4 ./image/root.img
+	fi
+}
+
+destroy_image() {
+	read -n 1 -p 'erase image (N/y) ' && echo
+	if [ "$REPLY" = 'Y' ] || [ "$REPLY" = 'y' ]; then
+		rm -rf image
+	fi
+}
+
 
 setup() {
 	check_root
 	stty -echoctl
 	trap sigint_handler SIGINT
-	create_ramdisk
+	eval "create_${FSPATH}"
 }
 
 teardown() {
 	stty echoctl
-	destroy_ramdisk
+	eval "destroy_${FSPATH}"
 	>&2 echo "exiting kvm.sh"
 }
 
