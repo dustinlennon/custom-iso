@@ -9,7 +9,7 @@
 
 source iso-shared.sh
 
-FSPATH=image
+vmname=scratch
 
 setup
 
@@ -19,9 +19,14 @@ run_kvm \
 	-m 4G \
 	-device virtio-scsi-pci \
 	-device scsi-hd,drive=hd \
-	-blockdev driver=raw,node-name=hd,file.driver=file,file.filename=./${FSPATH}/root.img \
-	-netdev user,id=unet,hostfwd=tcp::2222-:22 \
-	-device virtio-net-pci,netdev=unet \
-	-cdrom scratch.iso 2> /dev/null
+	-blockdev driver=raw,node-name=hd,file.driver=file,file.filename=/var/local/image/${vmname}.img \
+	-device virtio-net,netdev=n1 \
+	-netdev bridge,id=n1,br=br0 \
+	-cdrom /var/local/image/${vmname}.iso 
+
+#  original ./iso-install.sh script
+#	 -netdev user,id=unet,hostfwd=tcp::2222-:22 \
+#	 -device virtio-net-pci,netdev=unet \
+
 
 teardown

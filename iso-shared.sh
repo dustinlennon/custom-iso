@@ -11,36 +11,36 @@ sigint_handler() {
 	trap - SIGINT
 }
 
-create_ramdisk() {
-	if [ ! -d ramdisk ]; then
-		mkdir ramdisk
-		sudo mount -t tmpfs -o size=8000M kvmroot ./ramdisk
-		touch ./ramdisk/root.img
-		truncate -s 7800M ./ramdisk/root.img
-	fi
-}
+# create_ramdisk() {
+# 	if [ ! -d ramdisk ]; then
+# 		mkdir ramdisk
+# 		sudo mount -t tmpfs -o size=8000M kvmroot ./ramdisk
+# 		touch ./ramdisk/root.img
+# 		truncate -s 7800M ./ramdisk/root.img
+# 	fi
+# }
 
-destroy_ramdisk() {
-	read -n 1 -p 'erase ramdisk (N/y) ' && echo
-	if [ "$REPLY" = 'Y' ] || [ "$REPLY" = 'y' ]; then
-		sudo umount ./ramdisk
-		rm -rf ramdisk	
-	fi
-}
+# destroy_ramdisk() {
+# 	read -n 1 -p 'erase ramdisk (N/y) ' && echo
+# 	if [ "$REPLY" = 'Y' ] || [ "$REPLY" = 'y' ]; then
+# 		sudo umount ./ramdisk
+# 		rm -rf ramdisk	
+# 	fi
+# }
 
 create_image() {
-	if [ ! -d image ]; then
-		mkdir image
-		touch ./image/root.img
-		truncate -s 20G ./image/root.img
-		mkfs.ext4 ./image/root.img
+	mkdir -p /var/local/image
+	if [ ! -f "/var/local/image/${vmname}.img" ]; then
+		touch /var/local/image/${vmname}.img
+		truncate -s 20G /var/local/image/${vmname}.img
+		mkfs.ext4 /var/local/image/${vmname}.img
 	fi
 }
 
 destroy_image() {
 	read -n 1 -p 'erase image (N/y) ' && echo
 	if [ "$REPLY" = 'Y' ] || [ "$REPLY" = 'y' ]; then
-		rm -rf image
+		rm -rf /var/local/image/${vmname}.img
 	fi
 }
 
@@ -49,12 +49,12 @@ setup() {
 	check_root
 	stty -echoctl
 	trap sigint_handler SIGINT
-	eval "create_${FSPATH}"
+	eval "create_image"
 }
 
 teardown() {
 	stty echoctl
-	eval "destroy_${FSPATH}"
+	eval "destroy_image"
 	>&2 echo "exiting kvm.sh"
 }
 

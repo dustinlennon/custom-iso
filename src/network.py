@@ -13,14 +13,16 @@ from opener import *
 from parser import Parser
 
 
-# test_args = shlex.split("--context tty --cmdline ./test/cmdline")
-test_args = None
+#
+# Test: 
+#   file output:  pipenv run python3 src/network.py --mount ${PWD}/rfs --hostname fuzz --cmdline test/cmdline --phase late
+#   tty output:   pipenv run python3 src/network.py --context tty --hostname fuzz --cmdline test/cmdline --phase late
 
 
 if __name__ == '__main__':
 
   parser  = Parser.build()
-  args    = parser.parse_args(test_args)
+  args    = parser.parse_args()
   
   writer = Opener(args)
 
@@ -42,7 +44,7 @@ if __name__ == '__main__':
   wlan = {}
 
   ssid = None
-  for t in tokens:   
+  for t in tokens:
     mssid  = rex_ssid.match(t)
     mpwd   = rex_pwd.match(t)
 
@@ -57,7 +59,7 @@ if __name__ == '__main__':
   _wifi['access-points'] = {
     k:{'password' : v} for k,v in wlan.items() if v
   }
- 
+
   # network link data
   cmd = shlex.split("ip -j link")
   links = subprocess.run(cmd, capture_output = True)
@@ -69,7 +71,7 @@ if __name__ == '__main__':
   default_route = json.loads(default_route.stdout)
 
   try:
-    if writer.args.early:
+    if writer.args.phase == 'early':
       raise IndexError("early: no default route")
     default_ifname = default_route[0].get("dev", None)
   except IndexError:
@@ -79,6 +81,7 @@ if __name__ == '__main__':
   for dev in links:
     ifname = dev.get("ifname")
 
+    # ref: man systemd.net-naming-scheme
     if ifname.startswith("en"):
       key = 'ethernets'
       network[key][ifname] = copy.deepcopy(_wired)
@@ -88,26 +91,17 @@ if __name__ == '__main__':
     else:
       continue
 
-    if ifname == default_ifname:
-      network[key][ifname].pop('optional')
+    # # This requires that the interface associated with a "found" default route 
+    # # be available subsequently.
+    # if ifname == default_ifname:
+    #   network[key][ifname].pop('optional')
 
-  # early:  
-  #   /netplan.yml
-  if writer.args.early:
+  if writer.args.phase == 'early':
     filename = "/netplan.yml"
     with writer(filename, "w") as f:
       yaml.dump(netplan, f, Dumper = yaml.Dumper)
 
-  # late:  
-  #   /etc/netplan/60-preconfigured.yaml
-  #   /etc/systemd/resolved.conf.d
-  #   /etc/systemd/network/*conf
-  #   /etc/hostname
-  else:
-    # filename = "/etc/netplan/60-preconfigured.yaml"
-    # with writer(filename, "w") as f:
-    #   yaml.dump(netplan, f, Dumper = yaml.Dumper)
-
+  elif writer.args.phase == 'late':
     filename = f"/etc/systemd/resolved.conf.d/10-mdns.conf"
     with writer(filename, "w") as f:
       f.write(resolve_conf)

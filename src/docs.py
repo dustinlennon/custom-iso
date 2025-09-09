@@ -17,13 +17,11 @@ network:
     _:
       dhcp4: true
       optional: true
-      link-local: [ ipv4 ]
 
   wifis:
     _:
       dhcp4: true
       optional: true
-      link-local: [ ipv4 ]
       access-points: {}
 '''.lstrip()
 

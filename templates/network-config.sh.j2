@@ -2,21 +2,16 @@
 #
 # ---> WARNING! THIS SCRIPT IS DYNAMICALLY GENERATED <---
 #
-# This script encodes dependencies required to execute network.py.  It should be only be
-# updated via src/rebuild.py.
+# network-config.sh is a component of the cloud-init configuration, c.f.
+# ./cloud-init/preseed/user-data.
 #
-# testing: 
-#   args="--reroot ${PWD}/rfs" ./network-config.sh
-#   args="--reroot ${PWD}/rfs" ./network-config.sh --early
+# Update network-config.sh:
+#   pipenv run python3 src/create_script.py
 #
-# The process currently generates the following files:
+# Test: 
+#   ./network-config.sh --mount ${PWD}/rfs --phase early
+#   ./network-config.sh --mount ${PWD}/rfs --phase late --hostname fuzz --cmdline test/cmdline
 #
-# ./rfs/etc/systemd/resolved.conf.d/10-mdns.conf
-# ./rfs/etc/systemd/network/10-netplan-wlp0s20f3.network.d/10-mdns.conf
-# ./rfs/netplan.yml   <-- from "--early"
-#
-# to regenerate DATA:
-#   tar -C src -cz . | base64 -
 
 read -r -d '' DATA<<EOF
 {{ encoded_data }}

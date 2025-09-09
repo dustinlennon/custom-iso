@@ -10,6 +10,8 @@
 #   --add-cmdline-arg 'hostname=hal ds=nocloud\;s=/cdrom/preseed'
 #
 
+vmname=scratch
+
 source iso-shared.sh
 
 check_root
@@ -22,7 +24,7 @@ SRCISO=$PWD/ubuntu-24.04.2-live-server-amd64.iso
 PYTHONPATH=./livefs-editor \
 python3 -m livefs_edit \
 	$SRCISO \
-	scratch.iso \
+	/var/local/image/${vmname}.iso \
 	--shell 'mkdir -p new/iso/preseed' \
 	--cp $PWD/network-config.sh              new/iso/network-config.sh \
 	--cp $PWD/cloud-init/boot/grub/grub.cfg  new/iso/boot/grub/grub.cfg \
@@ -30,4 +32,4 @@ python3 -m livefs_edit \
 	--cp $PWD/cloud-init/preseed/user-data   new/iso/preseed/user-data \
 	--cp $PWD/cloud-init/preseed/vendor-data new/iso/preseed/vendor-data	
 
-chown ${SUDO_USER}:${SUDO_USER} scratch.iso
+chown ${SUDO_USER}:${SUDO_USER} /var/local/image/${vmname}.iso
