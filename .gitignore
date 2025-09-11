@@ -1,9 +1,12 @@
 livefs-editor
 network-config.sh
 ubuntu-24.04.2-live-server-amd64.iso
+noble-server-cloudimg-amd64.img
 scratch.iso
 rfs
 .env
 __pycache__
 test/cmdline
 ramdisk
+ssh/*
+*.tgz

@@ -1,4 +1,0 @@
-#cloud-config
-ssh_authorized_keys: 
-  - "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJztCT8qM/rX5itwNBdTma7QEBLYZzkJ1lBx7h5YPQsH ubuntu@scratch"
-hostname: scratch
