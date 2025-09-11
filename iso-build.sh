@@ -3,28 +3,43 @@
 #
 # Create scratch.iso.  Run as sudo.
 #
+
+#
 # livefs-editor is a required dependency:
 #   git clone https://github.com/mwhudson/livefs-editor
+
 #
 # Alternatively, kernel parameters could be specified via livefs_edit:
 #   --add-cmdline-arg 'hostname=hal ds=nocloud\;s=/cdrom/preseed'
 #
 
-vmname=scratch
+#
+# Mount an iso
+# 	$ sudo mount -o loop,ro /var/local/image/ubuntu-24.04.2-live-server-amd64-custom.iso ./mnt
+#
 
 source iso-shared.sh
-
 check_root
 
-# rebuild network-config.sh
+#
+# Rebuild network-config.sh
+#
 sudo -u $SUDO_USER python3 src/create_script.py
 
-SRCISO=$PWD/ubuntu-24.04.2-live-server-amd64.iso
+#
+# Create modded ISO image
+#
+
+mkdir -p /var/local/image
+
+ISO_NAME=ubuntu-24.04.2-live-server-amd64
+SRC_ISO=$PWD/${ISO_NAME}.iso
+DEST_ISO=/var/local/image/${ISO_NAME}-custom.iso
 
 PYTHONPATH=./livefs-editor \
 python3 -m livefs_edit \
-	$SRCISO \
-	/var/local/image/${vmname}.iso \
+	$SRC_ISO \
+	$DEST_ISO \
 	--shell 'mkdir -p new/iso/preseed' \
 	--cp $PWD/network-config.sh              new/iso/network-config.sh \
 	--cp $PWD/cloud-init/boot/grub/grub.cfg  new/iso/boot/grub/grub.cfg \
@@ -32,4 +47,4 @@ python3 -m livefs_edit \
 	--cp $PWD/cloud-init/preseed/user-data   new/iso/preseed/user-data \
 	--cp $PWD/cloud-init/preseed/vendor-data new/iso/preseed/vendor-data	
 
-chown ${SUDO_USER}:${SUDO_USER} /var/local/image/${vmname}.iso
+chown ${SUDO_USER}:${SUDO_USER} $DEST_ISO

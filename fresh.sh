@@ -15,8 +15,8 @@
 
 #
 # SSH:
-#	ssh -i ssh/foo ubuntu@192.168.1.99
-#   ssh-add ssh/foo
+#	ssh -i ssh/service ubuntu@192.168.1.99
+#   ssh-add ssh/service
 #   ssh -o StrictHostKeyChecking=no ubuntu@scratch sudo shutdown -h now
 #
 
@@ -78,7 +78,7 @@ instance_id=$(openssl rand -hex 3)
 vmfs=$(tar -cz -C ./vmfs . | base64 -w 0 | tee vmfs.tgz)
 
 # read the ssh public key
-ssh_key=$(cat ssh/foo.pub)
+ssh_key=$(cat ssh/service.pub)
 
 
 # user-data.yaml
