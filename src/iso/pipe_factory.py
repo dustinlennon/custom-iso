@@ -1,52 +1,28 @@
 import shlex
-import sys
-import traceback
 
 from typing import Optional
 from types import SimpleNamespace
 
-from zope.interface import Interface, implementer
-
 from twisted.internet import (
-  abstract,
   defer,
-  fdesc,
   interfaces,
-  process,
-  protocol
+  protocol,
+  reactor
 )
 
 from twisted.logger import LogLevel
-from twisted.python.failure import Failure
 
-from iso.context_logger import initialize_logging, ContextLogger
+from iso.callbacks import (
+  cb_exit,
+  cb_log_result,
+  eb_crash
+)
 
-#
-# callback, errback functions
-#
-def eb_crash(f : Failure):
-  tb = f.getTracebackObject()
-  if tb:
-    traceback.print_tb(tb)
-  else:
-    print(f">>> unknown failure mode: {f}")
-  f.raiseException()
-
-def cb_exit(success_value_list, reactor):
-  interfaces.IReactorTime(reactor).callLater(0, reactor.stop)
-
-def cb_log_result(result, logger, level: LogLevel, format = "cb_log_result", transform = str, **kw):
-  getattr(logger, level.name)(
-    format = format, result = transform(result), **kw
-  )
-
-def to_utf(b : bytes):
-  return b.decode().strip()
+from iso.context_logger import ContextLogger
 
 #
 # PipeProtocol class
 #
-
 class PipeProtocol(protocol.ProcessProtocol):
   logger = ContextLogger()
   transport : Optional[interfaces.IProcessTransport]
@@ -106,7 +82,7 @@ class Pipe(object):
     for cmd in self.factory.cmds:
       args = shlex.split(cmd)
       pipe_protocol = PipeProtocol(self)
-      proc = self.factory.reactor.spawnProcess(pipe_protocol, args[0], args)
+      proc = reactor.spawnProcess(pipe_protocol, args[0], args)
       self.procs.append(proc)
 
     n = len(self.factory.cmds)
@@ -129,8 +105,7 @@ class PipeFactory(object):
   logger  = ContextLogger()
   cache   = dict()
 
-  def __init__(self, reactor, cmds):
-    self.reactor  = reactor
+  def __init__(self, cmds):
     self.cmds     = cmds
 
   def run(self, data = None) -> defer.Deferred:
@@ -155,8 +130,7 @@ class PipeFactory(object):
 #
 if __name__ == '__main__':
 
-  from twisted.internet import reactor
-
+  from iso.context_logger import initialize_logging
   observer = initialize_logging(LogLevel.debug, {})
 
   logger = ContextLogger()
@@ -177,15 +151,15 @@ if __name__ == '__main__':
     "./vmfs/run/scripts/netplan-override.sh"
   ]).encode('utf8')
 
-  d1 = PipeFactory(reactor, cmds[1:]).run(data)
-  d1.addCallback(cb_log_result, logger, LogLevel.info, format = "with data: {result}")
+  d1 = PipeFactory(cmds[1:]).run(data)
+  d1.addCallback(cb_log_result, format = "with data: {result}")
   d1.addErrback(eb_crash)
 
-  d2 = PipeFactory(reactor,cmds).run()
-  d2.addCallback(cb_log_result, logger, LogLevel.info, format = "without data: {result}")
+  d2 = PipeFactory(cmds).run()
+  d2.addCallback(cb_log_result, format = "without data: {result}")
   d2.addErrback(eb_crash)
 
   dl = defer.DeferredList([d1, d2])
-  dl.addCallbacks(cb_exit, eb_crash, (reactor,))
+  dl.addCallbacks(cb_exit, eb_crash)
 
   reactor.run()
