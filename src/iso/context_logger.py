@@ -1,7 +1,7 @@
 import sys
 import os
 
-from typing import Optional
+from typing import Optional, Any
 
 from twisted.logger import (
   FileLogObserver,
@@ -45,11 +45,28 @@ def initialize_logging(
 #
 
 class ContextLogger(Logger):
+
+  def debug(self, format: Optional[str] = None, _depth = 2, **kwargs: object) -> None:
+    self.emit(LogLevel.debug, format, _depth = _depth, **kwargs)
+
+  def info(self, format: Optional[str] = None, _depth = 2, **kwargs: object) -> None:
+    self.emit(LogLevel.info, format, _depth = _depth, **kwargs)
+
+  def warn(self, format: Optional[str] = None, _depth = 2, **kwargs: object) -> None:
+    self.emit(LogLevel.warn, format, _depth = _depth, **kwargs)
+
+  def error(self, format: Optional[str] = None, _depth = 2, **kwargs: object) -> None:
+    self.emit(LogLevel.error, format, _depth = _depth, **kwargs)
+
+  def critical(self, format: Optional[str] = None, _depth = 2, **kwargs: object) -> None:
+    self.emit(LogLevel.critical, format, _depth = _depth, **kwargs)
+
+
   def emit(
-    self, level: LogLevel, format: Optional[str] = None, **kwargs: object
+    self, level: LogLevel, format: Optional[str] = None, *, _depth, **kwargs: object
   ) -> None:
     if level < LogLevel.info:
-      kwargs['log_frame'] = currentframe(2)
+      kwargs['log_frame'] = currentframe(_depth)
       kwargs['log_cwd']   = os.getcwd()
 
     try:

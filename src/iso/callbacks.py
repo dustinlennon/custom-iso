@@ -25,5 +25,13 @@ def cb_log_result(result, format, transform = str, level = LogLevel.info, **kw):
     format = format, result = transform(result), **kw
   )
 
+def cb_debug(result, *args, **kw):
+  logger.debug("{result}", result = result)
+  for a in args:
+    logger.debug("{a}", a = a)
+  for k,v in kw.items():
+    logger.debug("{k} : {v}", k = k, v = v)
+  return result
+
 def to_utf(b : bytes):
   return b.decode().strip()

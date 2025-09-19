@@ -11,3 +11,4 @@ ramdisk
 ssh/*
 *.tgz
 mnt
+twistd.pid

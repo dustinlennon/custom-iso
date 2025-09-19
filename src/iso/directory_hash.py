@@ -14,7 +14,7 @@ from iso.pipe_factory import PipeFactory
 class DirectoryHash(object):
   cmds = [
     """ /usr/bin/find {basedir} -type f -print0 """,
-    """ /usr/bin/xargs -O -I% {hasher} %""",
+    """ /usr/bin/xargs -0 -I% {hasher} %""",
     """ /usr/bin/sort """,
     """ {hasher} """
   ]

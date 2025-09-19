@@ -1,7 +1,8 @@
 from constantly import NamedConstant
 
-import traceback
 import re
+import inspect
+import traceback
 
 from typing import cast, Optional
 from types import FrameType
@@ -33,29 +34,29 @@ def eventAsText(
     timeStamp = "".join([formatTime(cast(float, event.get("log_time", None))), " "])
     
     namespace = event.get("log_namespace")
-    level   = cast(Optional[NamedConstant], event.get("log_level", None))
-    context     = ""
+    level     = cast(Optional[NamedConstant], event.get("log_level", None))
+    context   = namespace
 
     frame : FrameType = event.get('log_frame')
     if frame:
       try:
-        narg      = frame.f_code.co_argcount
-        args      = frame.f_code.co_varnames[0:narg]
-        signature = ", ".join(args)
+        argobj    = inspect.getargvalues(frame)
+        arglist   = [ ", ".join(l) for l in argobj[:3] if l is not None ]
+        signature = ", ".join(arglist)
+        
         qualname  = frame.f_code.co_qualname
         lineno    = frame.f_lineno
 
         cwd       = event.get('log_cwd')
         filename  = re.sub(cwd, ".", frame.f_code.co_filename)
-        namespace = f"{qualname}({signature}) [{filename}:{lineno}]"
+        context = f"\n# {qualname}({signature}) [{filename}:{lineno}]\n"
 
       except Exception as e:
         print(">>>", traceback.format_exc())
 
-    logmsg = "{timeStamp} | {level:<6} | {namespace} | {eventText}{context}".format(
+    logmsg = "{timeStamp} | {level:<6} | {eventText} | {context}".format(
       timeStamp = timeStamp,
       level = level.name,
-      namespace = namespace,
       eventText = eventText,
       context = context
     )

@@ -2,7 +2,7 @@
 
 #
 # Runner
-#	$ printf "pack ./isofs\n" | nc -C localhost 8121 | WORKDIR=/tmp/foo sudo -E /bin/bash -s /run/scripts/installer.sh
+#   $ printf "pack ./isofs\n" | nc -C localhost 8121 | WORKDIR=/tmp/foo sudo -E /bin/bash -s /run/scripts/installer.sh
 #   $ printf "pack ./isofs\n" | nc -C localhost 8121 | sudo /bin/bash -s /run/scripts/installer.sh
 #
 
@@ -44,7 +44,7 @@ cleanup() {
 trap cleanup EXIT
 
 log_header() {
-	printf "[ $(date +%Y-%m-%dT%H:%M:%S) ]\n\n"
+	printf "[ $(date +%Y-%m-%dT%H:%M:%S) ]\n"
 	if [ -n "$1" ]; then
 		echo "$1:"
 	fi
@@ -64,7 +64,10 @@ install() {
 	mkdir -p "$WORKDIR/"
 
 	log_header "$@" | log_pipe 0
-	
+
+	printf "\nWORKDIR:\n" | log_pipe 2
+	printf "$WORKDIR:\n" | log_pipe 4
+
 	# extract filesystem into working directory
 	printf "\ntarball:\n" | log_pipe 2
 	tar_args="-C $WORKDIR/ --no-same-owner --owner=root --group=root -xzv"
