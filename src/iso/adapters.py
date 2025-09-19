@@ -3,13 +3,12 @@ from zope.interface import implementer
 from twisted.python import components
 from twisted.web import resource
 
-from iso.context_logger import ContextLogger
-
 from iso.interfaces import *
 from iso.klein_delegator import KleinDelegator
 import iso.klein_mixins as mixins
 from iso.netcat_request import NetcatRequestFactory
 
+__all__ = []
 
 #
 # Adapter from IDirectoryHashService 
@@ -26,12 +25,6 @@ class DirectoryHashFactoryFromUtilityService(NetcatRequestFactory):
   def cmd_sha256(self, dirname) -> defer.Deferred:
     return self.service.getDirectoryHashSHA256(dirname)
 
-components.registerAdapter(
-  DirectoryHashFactoryFromUtilityService,
-  IDirectoryHashService,
-  IDirectoryHashNetcatRequestFactory
-)
-
 #
 # Adapter from ISelfExtractorService 
 #           to ISelfExtractorNetcatRequestFactory
@@ -43,12 +36,6 @@ class SelfExtractorFromUtilityService(NetcatRequestFactory):
 
   def cmd_pack(self, dirpath) -> defer.Deferred:
     return self.service.getSelfExtractor(dirpath)
-
-components.registerAdapter(
-  SelfExtractorFromUtilityService,
-  ISelfExtractorService,
-  ISelfExtractorNetcatRequestFactory
-)
 
 # Adapter from IUtilityService 
 #           to resource.IResource
@@ -64,4 +51,36 @@ class ResourceFromUtilityService(
   def __init__(self, service):
     super().__init__(service)
 
-components.registerAdapter(ResourceFromUtilityService, IUtilityService, resource.IResource)
+
+#
+# Adapters class
+#
+class Adapters(object):
+  __initialized__ = False
+
+  args = [
+    (
+      DirectoryHashFactoryFromUtilityService,
+      IDirectoryHashService,
+      IDirectoryHashNetcatRequestFactory
+    ),
+    (
+      SelfExtractorFromUtilityService,
+      ISelfExtractorService,
+      ISelfExtractorNetcatRequestFactory
+    ),
+    (
+      ResourceFromUtilityService,
+      IUtilityService,
+      resource.IResource
+    )
+  ]
+
+  @classmethod
+  def registerAll(cls):
+    if cls.__initialized__ == False:
+      for args in cls.args:
+        components.registerAdapter(*args)
+    cls.__initialized__ = True
+
+Adapters.registerAll()
