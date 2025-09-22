@@ -6,6 +6,9 @@ name = "pypi"
 [packages]
 klein = "*"
 twisted = "*"
+pyopenssl = "*"
+service-identity = "*"
+idna = "*"
 
 [dev-packages]
 

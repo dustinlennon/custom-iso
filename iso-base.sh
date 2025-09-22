@@ -18,23 +18,13 @@
 # 	$ sudo mount -o loop,ro /var/local/image/ubuntu-24.04.2-live-server-amd64-custom.iso ./mnt
 #
 
-source iso-shared.sh
-check_root
-
 #
-# Rebuild network-config.sh
+# Create modified ISO image
 #
-sudo -u $SUDO_USER python3 src/create_script.py
-
-#
-# Create modded ISO image
-#
-
 mkdir -p /var/local/image
 
-ISO_NAME=ubuntu-24.04.2-live-server-amd64
-SRC_ISO=$PWD/${ISO_NAME}.iso
-DEST_ISO=/var/local/image/${ISO_NAME}-custom.iso
+SRC_ISO=/var/local/image/ubuntu-24.04.2-live-server-amd64.iso
+DEST_ISO=/var/local/image/ubuntu-24.04.2-live-server-amd64-custom.iso
 
 PYTHONPATH=./livefs-editor \
 python3 -m livefs_edit \

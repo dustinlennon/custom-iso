@@ -29,7 +29,7 @@ ETC_PATH=/etc/systemd/network
 if [ -f "/${RUN_PATH}/${NETWORK_FILE}" ]; then
 	mkdir -p ${ETC_PATH}/${NETWORK_FILE}.d
 	echo "+ adding network drop-in 10-override.conf"
-	echo "$CONFIG" | tee ${ETC_PATH}/${NETWORK_FILE}.d/10-override.conf
+	echo "$CONFIG" > ${ETC_PATH}/${NETWORK_FILE}.d/10-override.conf
 else
 	echo "+ no network drop-in required"
 fi

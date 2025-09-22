@@ -8,7 +8,9 @@ rfs
 __pycache__
 test/cmdline
 ramdisk
-ssh/*
 *.tgz
 mnt
 twistd.pid
+
+ssh/*
+cert/*

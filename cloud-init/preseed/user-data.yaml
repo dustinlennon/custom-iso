@@ -2,27 +2,18 @@
 #cloud-config
 
 #
-# Ref: https://canonical-subiquity.readthedocs-hosted.com/en/latest/reference/autoinstall-reference.html
+# This is intended to be a minimal configuration.  VMs will extend this "base" image.
 #
 
 #
-# generate passwords with `mkpasswd`.  E.g., 
-#   $ mkpasswd
-#   $ mkpasswd -m yescrypt --salt='$y$j9T$JHXk1KV/462GrKToRysPF.$'
+# Refs:
+#   - https://canonical-subiquity.readthedocs-hosted.com/en/latest/reference/autoinstall-reference.html
+#   - https://docs.cloud-init.io/en/24.1/reference/examples.html#configure-an-instance-s-trusted-ca-certificates
 #
 
 autoinstall:
   version: 1
   timezone: "America/Vancouver"
-
-  #
-  # Set hostname
-  #   - E.g., in grub boot menu:  linux /casper/vmlinuz --- hostname=foo
-  #
-  identity:
-    username: ubuntu
-    hostname: "{{ v1.local_hostname }}"
-    password: ''
 
   #
   # disable (slow) network updates
@@ -37,9 +28,11 @@ autoinstall:
   drivers:
     install: false
 
-  # restore ubuntu.sources
   late-commands:
-    - curtin in-target -- cp /etc/apt/sources.list.d/ubuntu.sources.curtin.orig /etc/apt/sources.list.d/ubuntu.sources  
+    # restore ubuntu.sources
+    - >
+      curtin in-target -- 
+      cp /etc/apt/sources.list.d/ubuntu.sources.curtin.orig /etc/apt/sources.list.d/ubuntu.sources  
 
   #
   # storage
@@ -53,50 +46,34 @@ autoinstall:
       sizing-policy: all
 
   #
-  # removing support for wifi
-  #
-
-  # early-commands: 
-  # # install wireless drivers
-  # - find /cdrom/pool/main/p/pcsc-lite -type f | xargs dpkg -i
-  # - find /cdrom/pool/main/w/wpa -type f | xargs dpkg -i
-  
-  # # netplan: add discovered network devices to autoinstall.yaml
-  # - /cdrom/network-config.sh --phase early
-  # - >
-  #   sed '$d' -i /autoinstall.yaml &&
-  #   cat /netplan.yml >> /autoinstall.yaml &&
-  #   echo "..." >> /autoinstall.yaml
-
-  # - netplan apply
-  # late-commands:
-  # - curtin in-target -- /usr/bin/ssh-keygen -A
-  # - curtin in-target -- /cdrom/network-config.sh --phase late --hostname "<jinja> v1.local_hostname </jinja>"
-
-  #
   # SSH
   #
-
   ssh:
     install-server: true
     allow-pw: false
 
-  ssh_authorized_keys:
-    - "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJztCT8qM/rX5itwNBdTma7QEBLYZzkJ1lBx7h5YPQsH ubuntu@scratch"
-
+  #
+  # 'user-data' passes-through to cloud-init.  c.f., 'userdata_raw' in
+  # /target/etc/cloud.cfg.d/99-installer.cfg
+  #
   user-data:
-    users:       
-      - default
-      - name: dnlennon
+    preserve_hostname: true
+
+    runcmd:
+      - systemctl enable serial-getty@ttyS0.service
+      - systemctl start serial-getty@ttyS0.service
+
+    users:
+      - name: ubuntu
+        gecos: 'Ubuntu User'
+        groups: users,admin,wheel
         shell: /bin/bash
-        groups: adm, cdrom, dip, lxd, plugdev, sudo
-        lock_passwd: false
-        passwd: '$y$j9T$VBNkpk7l/0H3ie5B2vF4c0$z/NNuIZRQcCivyv.mkPigE.Uh4H3l/3oJWKipDAqo4A'
-    # - name: ansible
-    #   gecos: Ansible User
-    #   groups: users,admin,wheel
-    #   sudo: "ALL=(ALL) NOPASSWD:ALL"
-    #   shell: /bin/bash
-    #   lock_passwd: true
-    #   ssh_authorized_keys:
-    #     - cert-authority,principals="ansible" ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQCn0zPCfVc10Tf/MT98ixmZfOXeilxfo33QILAY4gSL/x3yxSjHYZz7bZBvv1NxTWk0bVhHrzD4aIzNhniY2GJr6rJAYR2kXnUazXfJMqlvqE0GBOOrSzoFZeQDqIXcl2fNvsSHpTyfYblu9wFEi1JVUgc2AEDt5JdZo2WpOv9faWmQ65Uik0gUO24jQjP43jzAdva6ZCLn/ieT3QRTw8rtTyqLG85ni6kw42aErCCNLhPHPSYUSVC+I89ks/pDva8vK+Uw2iq2/T/mEF5mxddyJNS9yIFq6HBuz9F/y3bvgL0LRYIFuEbChMFwYSlSfy2r4obTH15csNbWEkwecGUcr2Oy7xutKVacCZ1uLwiQM2r0Si1otzs+4t+dvjKNnYTbHLeBzDeUjIXCUUKQX+vixN/eQHGSAmASbrarpRQ2ef06H3PxiiHxdkkFZ5wW7biUE1CPWJHm4gscXIDktKGVOmwMFuAKKVIyKJn1zeLRx4G/9uH/TXQFxUWk/nV3svE= mrdl-ca
+        sudo: ALL=(ALL) NOPASSWD:ALL
+        lock_passwd: true
+        ssh_import_id:
+          - gh:dustinlennon
+
+    write_files:
+      - path: /etc/issue
+        content: |
+          Ubuntu 24.04 LTS \n \l [\4]

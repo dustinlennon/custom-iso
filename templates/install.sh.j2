@@ -61,12 +61,12 @@ log_pipe() {
 }
 
 install() {
-	mkdir -p "$WORKDIR/"
+	mkdir -p "$WORKDIR/var/log"
 
 	log_header "$@" | log_pipe 0
 
 	printf "\nWORKDIR:\n" | log_pipe 2
-	printf "$WORKDIR:\n" | log_pipe 4
+	printf "$WORKDIR/:\n" | log_pipe 4
 
 	# extract filesystem into working directory
 	printf "\ntarball:\n" | log_pipe 2
