@@ -1,6 +1,11 @@
 #!/usr/bin/bash
 
 #
+# runner:
+#	VMNAME=golf sudo -E ./img-update.sh
+#
+
+#
 # References:
 #   - https://man.archlinux.org/man/virt-install.1
 #   - https://docs.openstack.org/image-guide/modify-images.html#guestmount
@@ -11,13 +16,6 @@
 # Image URL:
 #   https://cloud-images.ubuntu.com/
 #	https://cloud-images.ubuntu.com/noble/20250805/noble-server-cloudimg-amd64.img
-#
-
-#
-# SSH:
-#	ssh -i ssh/service ubuntu@192.168.1.99
-#   ssh-add ssh/service
-#   ssh -o StrictHostKeyChecking=no ubuntu@scratch sudo shutdown -h now
 #
 
 #
@@ -99,4 +97,3 @@ EOF
 
 echo ">>> virt-install $FLAGS"
 virt-install $FLAGS
-

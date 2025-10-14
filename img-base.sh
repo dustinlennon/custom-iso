@@ -5,7 +5,6 @@
 #   - https://man.archlinux.org/man/virt-install.1
 #
 
-
 VMNAME=ubuntu-base
 
 SRC_ISO=/var/local/image/ubuntu-24.04.2-live-server-amd64.iso
@@ -40,7 +39,7 @@ sudo -u libvirt-qemu -- qemu-img create -f qcow2 $DEST_IMG 10G
 #
 CLOUD_DIR=./cloud-init/preseed
 CLOUD_INIT_ARGS="\
-,user-data=$CLOUD_DIR/user-data.yaml\
+,user-data=$CLOUD_DIR/user-data-img.yaml\
 ,meta-data=$CLOUD_DIR/meta-data.yaml
 "
 

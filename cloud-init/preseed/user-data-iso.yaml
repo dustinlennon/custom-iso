@@ -1,0 +1,93 @@
+## template: jinja
+#cloud-config
+
+#
+# This is intended to be a minimal configuration.  VMs will extend this "base" image.
+#
+
+#
+# Refs:
+#   - https://canonical-subiquity.readthedocs-hosted.com/en/latest/reference/autoinstall-reference.html
+#   - https://docs.cloud-init.io/en/24.1/reference/examples.html#configure-an-instance-s-trusted-ca-certificates
+#
+
+autoinstall:
+  version: 1
+  timezone: "America/Vancouver"
+
+  #
+  # disable (slow) network updates
+  #
+  apt:
+    disable_suites:
+      - $RELEASE
+      - $RELEASE-updates
+      - $RELEASE-backports
+      - $RELEASE-security
+
+  drivers:
+    install: false
+
+  late-commands:
+    # restore ubuntu.sources
+    - >
+      curtin in-target -- 
+      cp /etc/apt/sources.list.d/ubuntu.sources.curtin.orig /etc/apt/sources.list.d/ubuntu.sources  
+
+    # # pause the installation for manual inspection
+    # - while [ ! -f /run/finish-now ]; do sleep 1; done
+
+    # postinstall: get self-extracting postinstall script; execute the installer
+    - >
+      curtin in-target -- 
+      curl -s -o /run/postinstall.sh {{ ds.meta_data.postinstall_url }}
+    - >
+      curtin in-target -- 
+      /usr/bin/bash /run/postinstall.sh /run/scripts/installer.sh
+
+
+  #
+  # storage
+  #
+  interactive-sections:
+    - storage
+
+  storage:
+    layout:
+      name: lvm
+      sizing-policy: all
+
+  #
+  # SSH
+  #
+  ssh:
+    install-server: true
+    allow-pw: false
+
+  #
+  # 'user-data' passes-through to cloud-init.  c.f., 'userdata_raw' in
+  # /target/etc/cloud.cfg.d/99-installer.cfg
+  #
+  user-data:
+    preserve_hostname: true
+
+    # # Remove this section for ISO.
+    # runcmd:
+    #   - systemctl enable serial-getty@ttyS0.service
+    #   - systemctl start serial-getty@ttyS0.service
+    #   - shutdown -h now
+
+    users:
+      - name: ubuntu
+        gecos: 'Ubuntu User'
+        groups: users,admin,wheel
+        shell: /bin/bash
+        sudo: ALL=(ALL) NOPASSWD:ALL
+        lock_passwd: true
+        ssh_import_id:
+          - gh:dustinlennon
+
+    write_files:
+      - path: /etc/issue
+        content: |
+          Ubuntu 24.04 LTS \n \l [\4]

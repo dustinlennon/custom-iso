@@ -34,6 +34,18 @@ autoinstall:
       curtin in-target -- 
       cp /etc/apt/sources.list.d/ubuntu.sources.curtin.orig /etc/apt/sources.list.d/ubuntu.sources  
 
+    # # pause the installation for manual inspection
+    # - while [ ! -f /run/finish-now ]; do sleep 1; done
+
+    # postinstall: get self-extracting postinstall script; execute the installer
+    - >
+      curtin in-target -- 
+      curl -s -o /run/postinstall.sh {{ ds.meta_data.postinstall_url }}
+    - >
+      curtin in-target -- 
+      /usr/bin/bash /run/postinstall.sh /run/scripts/installer.sh
+
+
   #
   # storage
   #
@@ -59,9 +71,11 @@ autoinstall:
   user-data:
     preserve_hostname: true
 
+    # Remove this section for ISO.
     runcmd:
       - systemctl enable serial-getty@ttyS0.service
       - systemctl start serial-getty@ttyS0.service
+      - shutdown -h now
 
     users:
       - name: ubuntu
