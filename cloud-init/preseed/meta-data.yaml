@@ -1,1 +1,5 @@
-postinstall_url: http://192.168.1.104/postinstall/iso
+# ssh_import_id must be in JSON format
+ssh_import_id: >
+  { "URL" : "https://192.168.1.104/sshkeys/%s" }
+
+bootstrap_url: http://192.168.1.104/pack/bootstrap
