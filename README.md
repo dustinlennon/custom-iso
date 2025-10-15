@@ -10,22 +10,24 @@ Images
 
 The run order is:
 
-+ ./img-base.sh
-+ ./img-update.sh
-+ ./img-run.sh
+```bash
+img-base.sh
+img-update.sh
+img-run.sh
+```
 
 
-### img-base.sh
+### `img-base.sh`
 
 Takes an ISO file and creates an IMG.  The IMG is "cloud-init-ready"; that is, the autoinstall process of the ISO has finished its first stage.
 
 
-### img-update.sh
+### `img-update.sh`
 
 Takes a "cloud-init-ready" IMG, sets a MAC address, and injects an /etc/hostname file.  Outputs an updated IMG.
 
 
-### img-run.sh
+### `img-run.sh`
 
 Start the VM.
 
