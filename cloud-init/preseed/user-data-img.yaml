@@ -2,10 +2,6 @@
 #cloud-config
 
 #
-# This is intended to be a minimal configuration.  VMs will extend this "base" image.
-#
-
-#
 # Refs:
 #   - https://canonical-subiquity.readthedocs-hosted.com/en/latest/reference/autoinstall-reference.html
 #   - https://docs.cloud-init.io/en/24.1/reference/examples.html#configure-an-instance-s-trusted-ca-certificates
@@ -34,17 +30,8 @@ autoinstall:
       curtin in-target -- 
       cp /etc/apt/sources.list.d/ubuntu.sources.curtin.orig /etc/apt/sources.list.d/ubuntu.sources  
 
-    # # pause the installation for manual inspection
+    # pause the installation for manual inspection
     # - while [ ! -f /run/finish-now ]; do sleep 1; done
-
-    # postinstall: get self-extracting postinstall script; execute the installer
-    - >
-      curtin in-target -- 
-      curl -s -o /run/postinstall.sh {{ ds.meta_data.postinstall_url }}
-    - >
-      curtin in-target -- 
-      /usr/bin/bash /run/postinstall.sh /run/scripts/installer.sh
-
 
   #
   # storage
@@ -65,17 +52,52 @@ autoinstall:
     allow-pw: false
 
   #
-  # 'user-data' passes-through to cloud-init.  c.f., 'userdata_raw' in
-  # /target/etc/cloud.cfg.d/99-installer.cfg
+  # N.B., 'user-data' passes-through to cloud-init.  c.f., 'userdata_raw' in
+  # /target/etc/cloud/cloud.cfg.d/99-installer.cfg
   #
   user-data:
+    ca_certs:
+      # This is the trusted "site" certificate which signs a CSR from the machine
+      # hosting the cloudconf server.  This enables an HTTPS connection which is a 
+      # requirement for ssh_import_id.
+      trusted:
+      - |
+        -----BEGIN CERTIFICATE-----
+        MIIC7jCCAdagAwIBAgIUJjIbIF+Pm2DzAtctz/+mg0bseTowDQYJKoZIhvcNAQEL
+        BQAwDzENMAsGA1UEAxMEbXJkbDAeFw0yNTA4MjcyMzMyMThaFw0zNTA4MjUyMzMy
+        MThaMA8xDTALBgNVBAMTBG1yZGwwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEK
+        AoIBAQDj/hCgkuCoIVTYmOsSdJtse8rH5VCEkP5oNNaUA0UIIjt70BwwsUM9cjou
+        d2xH6f4g9gJteUKR7HvVhpA16kw3lsZqJnhFcdaZysAIK8J5ZAeye0HizN6eejgf
+        2aXW7sNu6QdivHQTEjPmXPnYKUDErs7CioUCHm2R2QnAgUc3kephMS388zkDG21F
+        mzZeTd/uxYesCZA/PIjjnJRrIyV3ZRtKiMACxqlnp21KipRdBLmvV7Oaf4BHFvtW
+        2piu3ALeY27vx6cnEDcUh3+paX0hyurYWubPFQ8sDU+DX0MvoBxMCD6b3SHPhyLS
+        S2VGmOSmyO1wLGBE8rq0uqoH0KvZAgMBAAGjQjBAMA8GA1UdEwEB/wQFMAMBAf8w
+        DgYDVR0PAQH/BAQDAgIEMB0GA1UdDgQWBBQLV6fdOndmjDjVaPeyFGmwIfxYADAN
+        BgkqhkiG9w0BAQsFAAOCAQEAeHqQQ0bwkrRGOjQdI0Nd1bAikGylGcqLKvS9Mkux
+        ALTrKQCaehz0T2MPYn+A5oCKTspB9QpBpmIt4EQT3AJrvnSryagjg+yPc53zaIhd
+        3I2m71rZXAi6Me87Y8VIilPl5eJvraP96Dc2mQYvPWVP4CydlQl8l4S4Ds5NqoRs
+        4dYnRKsBHHIzedNESTDtQE5iFueD2Z0Q8RffdgAkuGPrsfVbw83t+sFEAY4Se6W6
+        gzH29IKDNR82D9i1nO1divsoyNmS9DL+0F59I8fh3fqwIsEceeFA7JvEwAsEoWFR
+        xRONIE+YcsVIkXK1YRDjFIRzbqglFs68ExoVwpmeHuMu0Q==
+        -----END CERTIFICATE-----
+
     preserve_hostname: true
 
-    # Remove this section for ISO.
     runcmd:
+      # Enable copy + paste semantics
       - systemctl enable serial-getty@ttyS0.service
-      - systemctl start serial-getty@ttyS0.service
+      - systemctl start  serial-getty@ttyS0.service
+
+      # get bootstrap data from install server
+      - mkdir /run/bootstrap
+      - curl -s {{ ds.meta_data.bootstrap_url }} | base64 -d | tar -xz -C /run/bootstrap
+
+      # per-link dropins to enable mDNS
+      - ls -1 /run/systemd/network | xargs /usr/bin/python3 /run/bootstrap/network-dropins.py
+
+      # require a system restart
       - shutdown -h now
+
 
     users:
       - name: ubuntu
@@ -85,9 +107,21 @@ autoinstall:
         sudo: ALL=(ALL) NOPASSWD:ALL
         lock_passwd: true
         ssh_import_id:
-          - gh:dustinlennon
+          - ubuntu
 
     write_files:
+      # Expose the IP address in the console
       - path: /etc/issue
         content: |
           Ubuntu 24.04 LTS \n \l [\4]
+
+      # The cloudconf server is specified in meta-data.yaml
+      - path: /etc/ssh/ssh_import_id
+        content: |
+          {{ ds.meta_data.ssh_import_id }}
+
+      - path: /etc/systemd/resolved.conf.d/10-mdns.conf
+        content: |
+          [Resolve]
+          MulticastDNS=yes
+
