@@ -19,7 +19,7 @@ img-run.sh
 
 ### `img-base.sh`
 
-Takes an ISO file and creates an IMG.  The IMG is "cloud-init-ready"; that is, the autoinstall process of the ISO has finished its first stage.
+Takes an ISO file and creates a Qcow2 IMG.  The IMG is "cloud-init-ready"; that is, the autoinstall process of the ISO has finished its first stage, and the subsequent boot will apply the cloud-init portion on the guest.
 
 
 ### `img-update.sh`
