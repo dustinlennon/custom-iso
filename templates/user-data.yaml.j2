@@ -57,17 +57,6 @@ autoinstall:
     hostname: {{ dig_request | dig_trim("localhost.localdomain") }}
     create_hostname_file: true
 
-    # runcmd:
-    #   # get bootstrap data from install server
-    #   - mkdir -p /run/bootstrap
-    #   - curl -s http://192.168.1.104/pack/bootstrap | base64 -d | tar -xz -C /run/bootstrap
-
-    #   # enable per-link mDNS via dropin conf files
-    #   - ls -1 /run/systemd/network | xargs /usr/bin/python3 /run/bootstrap/network-dropins.py
-
-    #   # restart to refresh systemd
-    #   - shutdown -h now
-
     users:
       - name: ubuntu
         gecos: 'Ubuntu User'
@@ -75,8 +64,6 @@ autoinstall:
         shell: /bin/bash
         sudo: ALL=(ALL) NOPASSWD:ALL
         lock_passwd: true
-        # lock_passwd: false
-        # passwd: "$5$5rzJB1LR9GFsmUh.$aT5I6kfZphCwfTXsfzj4JUT5Kfs9UIjWVxzhjC1JRoD"
         ssh_import_id:
           - ubuntu
 
@@ -91,8 +78,4 @@ autoinstall:
         content: >
           { "URL" : "https://192.168.1.104/sshkeys/%s" }
 
-      # - path: /etc/systemd/resolved.conf.d/10-mdns.conf
-      #   content: |
-      #     [Resolve]
-      #     MulticastDNS=yes
 
