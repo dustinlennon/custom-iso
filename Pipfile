@@ -1,0 +1,19 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+# tkap = {git = "https://github.com/dustinlennon/twisted-klein-and-pipes.git", ref = "v0.1.10"}
+tkap = { path = "../twisted-klein", editable = true }
+python-dotenv = "*"
+klein = "*"
+pyyaml = "*"
+jinja2 = "*"
+
+[dev-packages]
+
+[requires]
+python_version = "3.12"
+python_full_version = "3.12.3"
+

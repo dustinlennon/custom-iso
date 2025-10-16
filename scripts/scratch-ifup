@@ -1,4 +1,0 @@
-#!/bin/bash
-
-ip link set tapx master virbr2
-ip link set tapx up

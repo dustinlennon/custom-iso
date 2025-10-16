@@ -1,0 +1,98 @@
+#cloud-config
+
+autoinstall:
+  version: 1
+  timezone: "America/Vancouver"
+
+  #
+  # disable (slow) network updates
+  #
+  apt:
+    disable_suites:
+      - $RELEASE
+      - $RELEASE-updates
+      - $RELEASE-backports
+      - $RELEASE-security
+
+  drivers:
+    install: false
+
+  late-commands:
+    # restore ubuntu.sources
+    - >
+      curtin in-target -- 
+      cp /etc/apt/sources.list.d/ubuntu.sources.curtin.orig /etc/apt/sources.list.d/ubuntu.sources  
+
+    # pause the installation for manual inspection
+    # - while [ ! -f /run/finish-now ]; do sleep 1; done
+
+  #
+  # storage
+  #
+  interactive-sections:
+    - storage
+
+  storage:
+    layout:
+      name: lvm
+      sizing-policy: all
+
+  #
+  # SSH
+  #
+  ssh:
+    install-server: true
+    allow-pw: false
+
+  #
+  # N.B., 'user-data' passes-through to cloud-init.  c.f., 'userdata_raw' in
+  # /target/etc/cloud/cloud.cfg.d/99-installer.cfg
+  #
+  user-data:
+    ca_certs:
+      trusted: 
+        - |
+          {{ site_cert | indent(width=10, first=False) }}
+
+    hostname: {{ dig_request | dig_trim("localhost.localdomain") }}
+    create_hostname_file: true
+
+    # runcmd:
+    #   # get bootstrap data from install server
+    #   - mkdir -p /run/bootstrap
+    #   - curl -s http://192.168.1.104/pack/bootstrap | base64 -d | tar -xz -C /run/bootstrap
+
+    #   # enable per-link mDNS via dropin conf files
+    #   - ls -1 /run/systemd/network | xargs /usr/bin/python3 /run/bootstrap/network-dropins.py
+
+    #   # restart to refresh systemd
+    #   - shutdown -h now
+
+    users:
+      - name: ubuntu
+        gecos: 'Ubuntu User'
+        groups: users,admin,wheel
+        shell: /bin/bash
+        sudo: ALL=(ALL) NOPASSWD:ALL
+        lock_passwd: true
+        # lock_passwd: false
+        # passwd: "$5$5rzJB1LR9GFsmUh.$aT5I6kfZphCwfTXsfzj4JUT5Kfs9UIjWVxzhjC1JRoD"
+        ssh_import_id:
+          - ubuntu
+
+    write_files:
+      # Expose the IP address in the console
+      - path: /etc/issue
+        content: |
+          Ubuntu 24.04 LTS \n \l [\4]
+
+      # The cloudconf server is specified in meta-data.yaml
+      - path: /etc/ssh/ssh_import_id
+        content: >
+          { "URL" : "https://192.168.1.104/sshkeys/%s" }
+
+      # - path: /etc/systemd/resolved.conf.d/10-mdns.conf
+      #   content: |
+      #     [Resolve]
+      #     MulticastDNS=yes
+

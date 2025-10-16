@@ -1,4 +1,8 @@
+.env
 livefs-editor
 twistd.pid
-attic
 image
+mnt
+certs
+!certs/cert.sh
+config/local.yaml
