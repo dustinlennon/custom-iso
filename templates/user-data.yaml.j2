@@ -57,6 +57,9 @@ autoinstall:
     hostname: {{ dig_request | dig_trim("localhost.localdomain") }}
     create_hostname_file: true
 
+    runcmd:
+      - shutdown -h now
+
     users:
       - name: ubuntu
         gecos: 'Ubuntu User'
