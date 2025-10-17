@@ -7,17 +7,8 @@
 
 VMNAME=${VMNAME:-scratch}
 
-#
-# produce a fixed MAC address, N.B.:
-#   - prefix will be 50:54:00 on the guest; D8:0D:17 on the host
-#
-macaddr() {
-	local cmd=$"echo $VMNAME | md5sum | cut -c 1-6 | sed 's/../&:/g; s/:$//'"
-	local suffix=$(eval $cmd)
-	echo "50:54:00:$suffix"
-}
-
-NETWORK_ARGS="bridge=br0,model.type=virtio,mac.address=$(macaddr)"
+source shared/macaddr
+NETWORK_ARGS="bridge=br0,model.type=virtio,mac.address=$(macaddr $VMNAME)"
 
 SRC_ISO=/var/local/image/ubuntu-24.04.2-live-server-amd64-nocloud.iso
 DEST_IMG="/var/local/image/${VMNAME}.img"

@@ -1,0 +1,6 @@
+macaddr() {
+	local VMNAME=$1
+	local cmd=$"echo $VMNAME | md5sum | cut -c 1-6 | sed 's/../&:/g; s/:$//'"
+	local suffix=$(eval $cmd)
+	echo "50:54:00:$suffix"
+}

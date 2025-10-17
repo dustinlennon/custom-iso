@@ -4,8 +4,8 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-# tkap = {git = "https://github.com/dustinlennon/twisted-klein-and-pipes.git", ref = "v0.1.10"}
-tkap = { path = "../twisted-klein", editable = true }
+tkap = {git = "https://github.com/dustinlennon/twisted-klein-and-pipes.git", ref = "v0.1.12"}
+# tkap = { path = "/home/dnlennon/Workspace/Sandbox/twisted-klein", editable = true }
 python-dotenv = "*"
 klein = "*"
 pyyaml = "*"

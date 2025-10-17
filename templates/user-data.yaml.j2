@@ -52,9 +52,9 @@ autoinstall:
     ca_certs:
       trusted: 
         - |
-          {{ site_cert | indent(width=10, first=False) }}
+          {{ site_cert_path | from_path | indent(width=10, first=False) }}
 
-    hostname: {{ dig_request | dig_trim("localhost.localdomain") }}
+    hostname: {{ hostname | trim("\n.") }}
     create_hostname_file: true
 
     runcmd:
@@ -76,7 +76,6 @@ autoinstall:
         content: |
           Ubuntu 24.04 LTS \n \l [\4]
 
-      # The cloudconf server is specified in meta-data.yaml
       - path: /etc/ssh/ssh_import_id
         content: >
           { "URL" : "https://192.168.1.104/sshkeys/%s" }
