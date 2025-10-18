@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "161a8a1dfb16515a25db2d933d68552f5476764047addc2ca79e8f29ec647ce6"
+            "sha256": "b93a149db2aab8337b481eba9d9eafca9f53765ce023e09bae4d771c0e84117a"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -453,8 +453,8 @@
             "version": "==1.17.0"
         },
         "tkap": {
-            "git": "https://github.com/dustinlennon/twisted-klein-and-pipes.git",
-            "ref": "cd04c7499d2a79b53d54ee941dfe35eb9f5369f7"
+            "editable": true,
+            "path": "/home/dnlennon/Workspace/Sandbox/twisted-klein"
         },
         "tubes": {
             "hashes": [

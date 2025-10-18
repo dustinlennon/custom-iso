@@ -54,7 +54,7 @@ autoinstall:
         - |
           {{ site_cert_path | from_path | indent(width=10, first=False) }}
 
-    hostname: {{ hostname | trim("\n.") }}
+    hostname: {{ hostname | default("localhost.", true) | trim("\n.") }}
     create_hostname_file: true
 
     runcmd:
